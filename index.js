@@ -33,15 +33,23 @@ const run = async () => {
 
     app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
-
       const result = await userCollection.findOne({ email });
+      if (result?.email) {
+        return res.send({ status: true, data: result });
+      }
+      res.send({ status: false });
+    });
 
+    app.get('/candidate/:id', async(req, res)=> {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await userCollection.findOne(filter);
       if (result?.email) {
         return res.send({ status: true, data: result });
       }
 
       res.send({ status: false });
-    });
+    })
 
     app.patch("/apply", async (req, res) => {
       const userId = req.body.userId;
@@ -88,6 +96,35 @@ const run = async () => {
 
       res.send({ status: false });
     });
+
+    app.patch("/jobstatus", async (req, res) => {
+      const jobId = req.body.jobId;
+      const filter = { _id: ObjectId(jobId) };
+      const job = await jobCollection.findOne(filter);
+    
+      let updateDoc;
+      if(job.jobstatus === false){
+        updateDoc = {
+          $set: {
+            jobstatus: true
+          }
+        };
+      }
+      else {
+        updateDoc = {
+          $set: {
+            jobstatus: false
+          }
+        };
+      }
+
+      const result = await jobCollection.updateOne(filter, updateDoc);
+      if (result?.acknowledged) {
+        return res.send({ status: true, data: result });
+      }
+
+      res.send({ status: false });
+    })
 
     app.patch("/reply", async (req, res) => {
       const userId = req.body.userId;
